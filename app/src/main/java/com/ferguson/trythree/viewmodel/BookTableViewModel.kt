@@ -1,6 +1,6 @@
-package com.ferguson.trythree.viewmodels
+package com.ferguson.trythree.viewmodel
 
-import com.ferguson.trythree.`class`.BookRow
+import com.ferguson.trythree.classes.BookRow
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -68,6 +69,13 @@ class BookTableViewModel : ViewModel() {
         _bookRows.find { it.isbn == isbn }?.isChecked = checked
     }
 
+    fun clearChecked() {
+        for (book in _bookRows) {
+            book.isChecked = false
+            book.quantity = 0
+        }
+    }
+
     fun updateQuantity(isbn: String, quantity: Int) {
         _bookRows.find { it.isbn == isbn }?.quantity = quantity
     }
@@ -76,8 +84,8 @@ class BookTableViewModel : ViewModel() {
         return _bookRows.filter { it.isChecked }.associate { it.dbkey to it.quantity }
     }
 
-    fun addBookstoCart(customerId: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
+    suspend fun addBookstoCart(customerId: Int) { //suspend to force waiting for this to finish. better for UI.
+        withContext(Dispatchers.IO) {
             val selectedBooks = getSelectedBooks()
             val bookArray = JSONArray()
 
@@ -122,7 +130,7 @@ class BookTableViewModel : ViewModel() {
                 println(responseJson)
             } catch (e: Exception) {
                 println("NetworkError$e")
-                //_bookRows.clear()
+                _bookRows.clear()
                 // _bookRows.add(BookRow(-1, "Error", e.message ?: "Unknown error", 0.0))
             }
         }

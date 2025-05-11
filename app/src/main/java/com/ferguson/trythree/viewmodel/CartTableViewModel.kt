@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -72,11 +73,10 @@ class CartTableViewModel: ViewModel() {
             }
         }
     }
-    fun purchaseCart(customerId: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
+    suspend fun purchaseCart(customerId: Int) {
+        withContext(Dispatchers.IO) {
             try {
-                val url =
-                    URL("http://undcemcs02.und.edu/~collin.l.ferguson/457/2/mobile_database.php")
+                val url = URL("http://undcemcs02.und.edu/~collin.l.ferguson/457/2/mobile_database.php")
                 val postData = "action=purchase_cart&user_id=$customerId"
                 val postBytes = postData.toByteArray(Charsets.UTF_8)
 
@@ -94,11 +94,13 @@ class CartTableViewModel: ViewModel() {
                 val response = connection.inputStream.bufferedReader().use { it.readText() }
                 val responseJson = JSONObject(response)
                 println(responseJson)
+
             } catch (e: Exception) {
-                println("NetworkError$e")
+                println("NetworkError: $e")
             }
         }
     }
+
     fun clearCart(){
         _tableData.clear()
     }
